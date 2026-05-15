@@ -1,0 +1,14 @@
+/* Hide authentication buttons by default to prevent flickering */
+#loginbutton,
+#signupbutton {
+  display: none;
+}
+
+/* Button styling */
+button {
+  background-color: red;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+}
