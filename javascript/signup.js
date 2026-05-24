@@ -1,13 +1,8 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-//  Récupère ces infos dans ton dashboard Supabase (URL + publishable/anon key)
-const SUPABASE_URL = "Mettrel'URL copiée sur Supabase ici";
-const SUPABASE_KEY = "Mettre la clé publique de votre projet Supabase ici";
 document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.getElementById("signupForm");
 
-  form?.addEventListener("submit", (e) => {
+  form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Extract page data
@@ -32,17 +27,33 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Validate user does not exist
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    if (users.some(elem => elem.username === username)){
-       document.getElementById("username").value = "";
+    // Check if username is already taken in Supabase
+    const { data: existingUser, error: lookupError } = await window.supabaseClient
+      .from("Utilisateur")
+      .select("id")
+      .eq("nom", username)
+      .maybeSingle();
+
+    if (lookupError) {
+      console.error("Lookup failed:", lookupError);
+      alert("Erreur de connexion à la base de données");
+      return;
+    }
+    if (existingUser) {
       alert("Nom d'utilisateur existe déjà");
       return;
     }
 
-    // Add new user to local storage
-    users.push({ username, email, password });
-    localStorage.setItem("users", JSON.stringify(users));
+    //Insert the new user into Supabase
+  const { error: insertError } = await window.supabaseClient
+    .from("Utilisateur")
+    .insert({ nom: username, email, mot_de_passe: password});
+
+    if (insertError) {
+      console.error("Insert failed:", insertError);
+      alert("Erreur d'inscription: " + insertError.message)
+      return;
+    }
     localStorage.setItem("loggedInUser", email);
 
     alert("Inscription réussie !");
